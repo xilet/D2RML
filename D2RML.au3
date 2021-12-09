@@ -25,6 +25,7 @@
 #include <StaticConstants.au3>
 #include <TrayConstants.au3>
 #include <WindowsConstants.au3>
+#include <WinAPISysWin.au3>
 #include <WinAPI.au3>
 #include <WinAPITheme.au3>
 #include <Misc.au3>
@@ -45,31 +46,35 @@ EndIf
 #Region ### START Koda GUI section ### Form=C:\Jack\Programs\D2\Multilaunch\guiMain.kxf
 $guiMain = GUICreate("D2RML", 363, 346, -1, -1)
 GUISetBkColor(0xC0DCC0)
-$buttonAdd = GUICtrlCreateButton("Add Token", 8, 40, 75, 25)
-$listViewMain = GUICtrlCreateListView("Account|Token Date|Region", 8, 72, 250, 150, BitOR($LVS_REPORT,$LVS_SINGLESEL,$WS_VSCROLL), BitOR($WS_EX_CLIENTEDGE,$LVS_EX_CHECKBOXES,$LVS_EX_FULLROWSELECT))
+$buttonAdd = GUICtrlCreateButton("添加账号令牌", 8, 40, 100, 25)
+$listViewMain = GUICtrlCreateListView("账号|令牌日期|区服", 8, 72, 250, 150, BitOR($LVS_REPORT,$LVS_SINGLESEL,$WS_VSCROLL), BitOR($WS_EX_CLIENTEDGE,$LVS_EX_CHECKBOXES,$LVS_EX_FULLROWSELECT))
 GUICtrlSendMsg(-1, $LVM_SETCOLUMNWIDTH, 0, 50)
 GUICtrlSendMsg(-1, $LVM_SETCOLUMNWIDTH, 1, 50)
 GUICtrlSendMsg(-1, $LVM_SETCOLUMNWIDTH, 2, 50)
-$buttonLaunch = GUICtrlCreateButton("Launch Selected", 264, 72, 91, 25)
-$buttonRefresh = GUICtrlCreateButton("Refresh Token", 264, 104, 91, 25)
-$buttonRemove = GUICtrlCreateButton("Remove Token", 264, 136, 91, 25)
-$labelHelp = GUICtrlCreateLabel("How does this work?", 256, 18, 103, 17)
+$buttonLaunch = GUICtrlCreateButton("启动选中账号", 264, 72, 91, 25)
+$buttonRefresh = GUICtrlCreateButton("刷新令牌", 264, 104, 91, 25)
+$buttonRemove = GUICtrlCreateButton("移除令牌", 264, 136, 91, 25)
+$labelHelp = GUICtrlCreateLabel("如何工作?", 256, 18, 103, 17)
 GUICtrlSetFont(-1, 8, 400, 4, "MS Sans Serif")
 GUICtrlSetColor(-1, 0x0000FF)
 GUICtrlSetCursor (-1, 0)
 GUICtrlCreateLabel("Sun's D2R Multilauncher", 8, 8, 236, 31)
 GUICtrlSetFont(-1, 15, 400, 0, "@Microsoft YaHei UI")
-$checkboxArgs = GUICtrlCreateCheckbox("Game cmdline:", 8, 232, 89, 17)
+$checkboxArgs = GUICtrlCreateCheckbox("额外命令参数:", 8, 232, 89, 17)
 $inputArgs = GUICtrlCreateInput("", 97, 230, 160, 21)
-$checkboxSkipIntro = GUICtrlCreateCheckbox("Skip intro videos", 8, 256, 97, 17)
-$checkboxChangeTitle = GUICtrlCreateCheckbox("Change game title to match token name", 8, 280, 209, 17)
-$checkboxMinimizeToTray = GUICtrlCreateCheckbox("Minimize to tray", 8, 304, 97, 17)
+$checkboxSkipIntro = GUICtrlCreateCheckbox("跳过动画", 8, 256, 222, 17)
+$checkboxChangeTitle = GUICtrlCreateCheckbox("变更游戏窗口标题", 8, 280, 222, 17)
+$checkboxMinimizeToTray = GUICtrlCreateCheckbox("启动游戏后隐藏到任务托盘", 8, 304, 222, 17)
+
+
 $StatusBar1 = _GUICtrlStatusBar_Create($guiMain)
 ;~ GUISetState(@SW_SHOW)
 #EndRegion ### END Koda GUI section ###
 
 _WinAPI_SetWindowTheme($StatusBar1, "", "")
 _GUICtrlStatusBar_SetBkColor($StatusBar1,0x9AB09A)
+
+
 
 GUISetIcon("d2rml.ico")
 
@@ -86,7 +91,7 @@ Global Const $bnetClientClass = "[CLASS:Chrome_WidgetWin_0]"
 Global Const $settingsFile = "D2RML.ini"
 Global Const $version = "0.0.5"
 
-WinSetTitle($guiMain, "", "D2RML v" & $version)
+WinSetTitle($guiMain, "", "暗黑2重置版多开汉化 v" & $version)
 LoadSettings()
 LoadAccounts()
 GUISetState()
@@ -136,7 +141,7 @@ Func GuiMessages()
 			EnableButtons()
 		Case $buttonRemove
 			DisableButtons()
-			If MsgBox(262144 + 36, "Remove account", "Are you sure you want to remove the checked account(s)?") = 6 Then
+			If MsgBox(262144 + 36, "移除账号", "确定要将选中的账号移除吗?") = 6 Then
 				$count = _GUICtrlListView_GetItemCount($listViewMain)
 				For $i = 0 To $count
 					If _GUICtrlListView_GetItemChecked($listViewMain, $i) Then
@@ -148,11 +153,13 @@ Func GuiMessages()
 			EndIf
 			EnableButtons()
 		Case $labelHelp
-			MsgBox(262144 + 64, $version, "Sun's D2R Multilauncher (D2RML) saves D2R login tokens from the registry into .bin files that are then restored on-demand." & @CRLF & _
-					"It also allows multiple copies of D2R to be launched simultaneously. No additional software is required." & @CRLF & @CRLF & _
-					"Initial setup requires that you log into an account at least once in order to save the token. " & _
-					"Login tokens are only valid once, after which they expire and a new token is generated. D2RML does this automatically as long as you *always* use this app to launch the game." & @CRLF & _
-					"Logging in through normal means will invalidate the saved token for the account and you will be unable to connect. Use the 'Refresh Token' button to redo the setup and generate a new token.")
+			MsgBox(262144 + 64, $version, "Sun's 暗黑2重置版多开启动器(D2RML)" & @CRLF & _
+					"本软件需要以管理员模式启动方可同时启动多个游戏窗口。" & @CRLF & @CRLF & _
+					"您需要至少登录一次账户以取得登录令牌并保存，之后就可以通过启动选中令牌来直接进入游戏。" & _
+					"登录令牌是有时效性的，当进入游戏无法连接时，就要通过刷新令牌重新登录战网并进入游戏来获取新的令牌。" & @CRLF & _
+					"由 xilet#1571 汉化并微调修改游戏标题的功能." & @CRLF & _
+					"修改版: https://github.com/xilet/D2RML" & @CRLF & _
+					"原版地址:https://github.com/Sunblood/D2RML")
 		Case $GUI_EVENT_MINIMIZE
 			If GUICtrlRead($checkboxMinimizeToTray) = $GUI_CHECKED Then
 				GUISetState(@SW_HIDE)
@@ -197,7 +204,7 @@ EndFunc
 
 Func Setup($name = "")
 	If ProcessExists("D2R.exe") Or ProcessExists("Battle.net.exe") Or ProcessExists("Diablo II Resurrected Launcher.exe") Then
-		If MsgBox(262144 + 5 + 16, "Error", "D2R and Battle.net launcher(s) must be closed.") = 4 Then ;retry
+		If MsgBox(262144 + 5 + 16, "Error", "D2R and Battle.net launcher(s) 游戏窗口和战网登录器必须关闭") = 4 Then ;retry
 			Setup($name)
 			Return
 		Else
@@ -206,9 +213,9 @@ Func Setup($name = "")
 	EndIf
 
 	If $name = "" Then
-		$name = InputBox("Setup", "Enter a name for the token:")
+		$name = InputBox("Setup", "输入令牌名称:")
 		If $name = "" Then Return
-		$region = InputBox("Setup", "Enter the server region for the token" & @CRLF & @CRLF & "Acceptable values are NA / EU / KR", "NA")
+		$region = InputBox("Setup", "输入令牌登录区域" & @CRLF & @CRLF & "允许以下 [NA / EU / KR]", "NA")
 		If $region = "" Then Return
 	EndIf
 
@@ -216,15 +223,15 @@ Func Setup($name = "")
 	WinClose($bnetLauncherClass)
 
 	UpdateStatus("Log into the Launcher with the desired account and press PLAY")
-;~ 	ToolTip("Creating Tokens: " & $name & @CRLF & "Log into the Launcher with the desired account and press PLAY", 0, 0)
+;~ 	ToolTip("创建令牌: " & $name & @CRLF & "Log into the Launcher with the desired account and press PLAY", 0, 0)
 	LaunchLauncher()
 
 	ProcessWait("D2R.exe")
-	UpdateStatus("Creating Tokens: " & $name & @CRLF & "Generating token 1 of 2...")
-;~ 	ToolTip("Creating Tokens: " & $name & @CRLF & "Generating token 1 of 2...", 0, 0)
+	UpdateStatus("创建令牌: " & $name & @CRLF & "生成令牌 1 of 2...")
+;~ 	ToolTip("创建令牌: " & $name & @CRLF & "生成令牌 1 of 2...", 0, 0)
 	WaitForNewKey()
-	UpdateStatus("Creating Tokens: " & $name & @CRLF & "Generating token 2 of 2...")
-;~ 	ToolTip("Creating Tokens: " & $name & @CRLF & "Generating token 2 of 2...", 0, 0)
+	UpdateStatus("创建令牌: " & $name & @CRLF & "生成令牌 2 of 2...")
+;~ 	ToolTip("创建令牌: " & $name & @CRLF & "生成令牌 2 of 2...", 0, 0)
 	WaitForNewKey()
 	;Key changes twice - second key is what we want
 
@@ -239,40 +246,41 @@ Func Setup($name = "")
 		WinSetTitle(GetGameWindowHandle(ProcessExists("D2R.exe")), "", "D2R:" & $name)
 	EndIf
 	CloseMultiProcessHandle(ProcessExists("D2R.exe"))
-	MsgBox(262144 + 64, "Finished", "Successfully saved token: " & $name)
+	MsgBox(262144 + 64, "完成", "成功保存令牌: " & $name)
 EndFunc   ;==>Setup
 
 Func LaunchWithAccount($name)
 	If Not FileExists($name&".bin") Then
-		MsgBox(262144 + 16,"Error","Unable to find saved token "&$name&".bin")
+		MsgBox(262144 + 16,"Error","无法找到令牌 "&$name&".bin")
 		Return
 	EndIf
-	UpdateStatus("Launching token: "&$name)
+	UpdateStatus("以令牌启动: "&$name)
 ;~ 	ToolTip("Launching token: " & $name, 0, 0)
 	WriteRegKey($name & ".bin")
 	$curKey = RegRead($accountRegKey[0], $accountRegKey[1])
 	$gamePID = LaunchGame()
 
-	UpdateStatus("Refreshing token 1 of 2")
+	UpdateStatus("刷新令牌 1 of 2")
 ;~ 	ToolTip("Launching token: " & $name & @CRLF & "Refreshing token 1 of 2...", 0, 0)
 	If WaitForNewKey() = 0 Then
-		MsgBox(262144 + 16, "Error", "Error obtaining new tokens. Game process closed.")
+		MsgBox(262144 + 16, "Error", "获取新令牌错误,游戏进程将关闭.")
 		ToolTip("")
 		Return
 	EndIf
 	UpdateStatus("Refreshing token 2 of 2")
 ;~ 	ToolTip("Launching token: " & $name & @CRLF & "Refreshing token 2 of 2...", 0, 0)
 	If WaitForNewKey() = 0 Then
-		MsgBox(262144 + 16, "Error", "Error obtaining new tokens. Game process closed.")
+		MsgBox(262144 + 16, "Error", "获取新令牌错误,游戏进程将关闭.")
 		ToolTip("")
 		Return
-	EndIf
+	 EndIf
 
 	ToolTip("")
 
 	If ProcessExists($gamePID) Then
 		If GUICtrlRead($checkboxChangeTitle) = $GUI_CHECKED Then
-			WinSetTitle(GetGameWindowHandle($gamePID), "", "D2R:" & $name)
+		   ChangeGameByPID($gamePID,  $name & " - D2R")
+			;WinSetTitle(GetGameWindowHandle($gamePID), "", "D2R:" & $name)
 		EndIf
 		ExportRegKey($name & ".bin")
 		CloseMultiProcessHandle($gamePID)
@@ -366,7 +374,9 @@ Func LaunchLauncher() ;hehe
 	Local $gamepath = RegRead($gameInstallRegKey[0], $gameInstallRegKey[1])
 	Return ShellExecute($bnpath & "\Battle.net.exe", '--game=osi "--gamepath=' & $gamepath & '"')
 	;~ 	Return _RunWithReducedPrivileges($bnpath&"\Battle.net.exe",'--game=osi "--gamepath='&$gamepath&'"')
-EndFunc   ;==>LaunchLauncher
+ EndFunc   ;==>LaunchLauncher
+
+
 Func GetGameWindowHandle($pid)
 	$p = _ProcessGetWindow($pid)
 	If IsArray($p) Then
@@ -375,7 +385,15 @@ Func GetGameWindowHandle($pid)
 		EndIf
 	EndIf
 	Return 0
-EndFunc   ;==>GetGameWindowHandle
+ EndFunc   ;==>GetGameWindowHandle
+
+Func ChangeGameByPID($pid, $title)
+   If $pid Then
+      Local $hwnd = _WinGetHandleByPidAndCls($pid, "OsWindow")
+	  _WinAPI_SetWindowText ($hwnd, $title  )
+   EndIf
+ EndFunc   ;==>GetGameWindowHandle
+
 
 Func SaveSettings()
 	IniWrite($settingsFile, "Main", "argsEnabled", GUICtrlRead($checkboxArgs))
@@ -416,6 +434,33 @@ Func ComspecGetOutput($command, $cmd = 1)
 	ProcessWaitClose($iPID)
 	Return StdoutRead($iPID)
 EndFunc   ;==>ComspecGetOutput
+
+
+; 根据pname和class获取窗口句柄，找不到则返回0
+Func _WinGetHandleByPnmAndCls($pname, $class)
+   ; 根据进程名查找进程id
+   Local $pid = ProcessExists($pname)
+   ; 如果进程存在，继续
+   If $pid Then
+      return _WinGetHandleByPidAndCls($pid, $class)
+   Else
+      Return 0
+   EndIf
+EndFunc
+
+; 根据pid和class获取窗口句柄，找不到则返回0
+Func _WinGetHandleByPidAndCls($pid, $class)
+   ; 这里使用枚举所有顶层窗口方法，WinList方法会返回大量隐藏窗口
+   Local $winArr = _WinAPI_EnumWindowsTop()
+   ; 遍历所有窗口,进程id与指定进程id比较
+   For $i=1 To $winArr[0][0]
+      If $pid=WinGetProcess($winArr[$i][0]) And $winArr[$i][1]=$class Then
+         ; 一个进程会有多个窗口，所以要用class来筛选
+         return $winArr[$i][0]
+      EndIf
+   Next
+   Return 0
+EndFunc
 
 Func _FileSearch($szMask, $nOption)
 	Local $szRoot = ""
