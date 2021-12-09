@@ -1,3 +1,12 @@
+原版地址:https://github.com/Sunblood/D2RML
+
+1.将软件界面改为中文显示,微调按钮宽度.
+2.原版变更游戏标题功能在我的电脑上似乎无效,故从https://blog.csdn.net/moonshine_1988/article/details/48006043?locationNum=2&fps=1 抄了部分代码来修改游戏窗口标题.
+其它未作改动.
+
+混迹在亚洲服专家模式
+ID: xilet#1571  辅助职业 强化法师以及Bo野蛮人
+
 # Diablo 2 Resurrected Multi-Launcher by Sunblood
 
 Allows you to launch and connect with multiple instances of Diablo 2 Resurrected using pre-generated login tokens.
