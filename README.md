@@ -4,6 +4,10 @@
 2.原版变更游戏标题功能在我的电脑上似乎无效,故从https://blog.csdn.net/moonshine_1988/article/details/48006043?locationNum=2&fps=1 抄了部分代码来修改游戏窗口标题.
 其它未作改动.
 
+
+
+![2021-10-21 21_24_16-Window](https://github.com/xilet/D2RML/blob/main/readme.png)
+
 混迹在亚洲服专家模式
 ID: xilet#1571  辅助职业 强化法师以及Bo野蛮人
 
